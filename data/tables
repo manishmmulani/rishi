@@ -1,0 +1,20 @@
+dimension - dimension_name, dimension_display_name
+measure - measure_name, measure_display_name
+reference - dimension_value, dimension_name
+action - action_name, action_display_name
+
+alldatasets - 
+date
+year
+month
+codle
+coname
+cobo_type
+cosiness_unit
+cope
+
+conl
+commission
+risk
+exposure
+usage

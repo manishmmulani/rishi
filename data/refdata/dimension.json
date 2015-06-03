@@ -1,0 +1,19 @@
+[
+{"dimension_name":"date","dimension_display_name":"date"},
+{"dimension_name":"month","dimension_display_name":"month"},
+{"dimension_name":"year","dimension_display_name":"year"},
+{"dimension_name":"cority","dimension_display_name":"cority"},
+{"dimension_name":"coname","dimension_display_name":"coname"},
+{"dimension_name":"coname","dimension_display_name":"cority"},
+{"dimension_name":"cobo_type","dimension_display_name":"cobo type"},
+{"dimension_name":"cobo_type","dimension_display_name":"cobotype"},
+{"dimension_name":"codle","dimension_display_name":"codle"},
+{"dimension_name":"codle","dimension_display_name":"codles"},
+{"dimension_name":"cosiness_unit","dimension_display_name":"cosiness unit"},
+{"dimension_name":"cosiness_unit","dimension_display_name":"cosinessunit"},
+{"dimension_name":"cosiness_unit","dimension_display_name":"bu"},
+{"dimension_name":"cope","dimension_display_name":"cobterparty"},
+{"dimension_name":"cope","dimension_display_name":"cobterparty entity"},
+{"dimension_name":"cope","dimension_display_name":"cobterpartyentity"},
+{"dimension_name":"cope","dimension_display_name":"cope"}
+]

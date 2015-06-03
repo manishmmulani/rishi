@@ -1,0 +1,1 @@
+mongod --dbpath ~/work/rishi/data/db --port 9160 --smallfiles

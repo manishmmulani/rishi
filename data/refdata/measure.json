@@ -1,0 +1,18 @@
+[
+{"measure_name":"conl","measure_display_name":"conl"},
+{"measure_name":"conl","measure_display_name":"conl"},
+{"measure_name":"conl","measure_display_name":"dtd"},
+{"measure_name":"conl","measure_display_name":"ytd"},
+{"measure_name":"commission","measure_display_name":"commission"},
+{"measure_name":"commission","measure_display_name":"commissions"},
+{"measure_name":"commission","measure_display_name":"fee"},
+{"measure_name":"commission","measure_display_name":"charge"},
+{"measure_name":"commission","measure_display_name":"charges"},
+{"measure_name":"risk","measure_display_name":"risk"},
+{"measure_name":"risk","measure_display_name":"crash"},
+{"measure_name":"risk","measure_display_name":"var"},
+{"measure_name":"exposure","measure_display_name":"exposure"},
+{"measure_name":"usage","measure_display_name":"usage"},
+{"measure_name":"usage","measure_display_name":"margin"},
+{"measure_name":"usage","measure_display_name":"capital usage"},
+]

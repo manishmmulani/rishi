@@ -1,0 +1,5 @@
+mongoimport --jsonArray --host localhost --port 9160 --collection dimension --db rishi --file /u/mulani/work/rishi/data/refdata/dimension.json
+
+mongoimport --jsonArray --host localhost --port 9160 --collection measure --db rishi --file /u/mulani/work/rishi/data/refdata/measure.json
+
+mongoimport --jsonArray --host localhost --port 9160 --collection action --db rishi --file /u/mulani/work/rishi/data/refdata/action.json

@@ -1,0 +1,465 @@
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Rishi</title>
+ 
+    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+
+    <link id="dportalCssLink" media="screen,print" rel="stylesheet" type="text/css" href="../stylesheets/rishi-all.css">
+    <script src="../js/rishi-all.js"></script>
+
+  </head>
+
+  <style>
+        body {
+                background-color: #E5E5E5;
+            }
+        li {
+            border-bottom: 1px solid rgb(223, 216, 216);
+            list-style-type: none;
+            font-size:13px;
+        }
+
+        li.active {
+            background-color: #CCC;
+        }
+
+        ul {
+            -webkit-padding-start:0px;
+        }
+
+  </style> 
+
+<body>
+
+    <div style="margin:0px auto 0px auto;width:350px;margin-top:20px;color:#2C2A2A;font-size:50px;font-family:'Tangerine', serif;">
+         RISHI<span style="padding-left:10px;font-size: 20px;">CO</span><div style="margin-top:-10px;margin-left:140px;font-size: 20px;">computational engine</div>
+    </div>
+
+    <div style="border-radius: 15px;box-shadow:0px 2px 10px 2px rgba(0, 0, 0, .4);margin:0px auto 0px auto;width:800px;margin-top:20px;" class="input-group">
+        
+        <input id="input_autocomplete_box" style="width: 800px;height:30px;padding:10px;" id="search_box" type="text" class="form-control" placeholder="Howdy!  What's your Query?">
+    </div>
+
+    <div id="autocomplete_box" style="color:#444;display:none;box-shadow: rgba(0, 0, 0, 0.4) 0px 2px 10px 2px; width: 800px; position: absolute; padding: 10px; z-index: 10; background-color: white;"> 
+        <ul id="autocomplete_box_ul">
+
+        </ul>   
+
+    </div>    
+
+    <div id="result_area" style="display:none;border-radius: 15px;box-shadow:0px 2px 5px 2px rgba(0, 0, 0, .4);margin:0px auto 0px auto;margin-top:30px;width:800px;height:2000px;background-color:white;">
+
+        <div id="result_area_query_interpretation">
+            <div id="result_area_query_interpretation_title" style="font-size:15px;font-weight:bold;color:#77a5b6;padding:20px;">
+                Query Interpretation:
+            </div>
+            <div style="font-size:25px;font-weight:bold;color:#484A4A;padding:10px;padding-top:0px;padding-left:20px;" id="result_area_query_interpretation_text" style=""></div>
+        </div>
+        <hr>
+
+        <div id="result_area_query_interpretation_grid" style="font-size:15px;font-weight:bold;color:#77a5b6;padding:20px;">
+            Result:
+        </div>
+        <span id="result_area_grid_span" style="display:none;">
+            <span style="font-size:15px;font-weight:bold;color:#77a5b6;padding:20px;">
+            Tabular Data:
+            <br/>
+            </span>
+            <br/>
+            <div id="result_area_grid" style="margin-left:20px;"></div>
+            </br><br/>
+        </span>
+        <span id="result_area_bar_chart_span" style="display:none;">
+            <span style="font-size:15px;font-weight:bold;color:#77a5b6;padding:20px;">
+            Bar Chart:
+            <br/>
+            </span>
+            <div id="result_area_bar_chart" style="margin-left:20px;"></div>
+            </br><br/>
+        </span>
+        <span id="result_area_chart_span" style="display:none;">
+            <span style="font-size:15px;font-weight:bold;color:#77a5b6;padding:20px;">
+            Time Series:<br/>
+            </span>
+            <div id="result_area_chart" style="margin-left:20px;"></div>
+            </br>
+        </span>
+        <hr>
+    </div>
+
+</body> 
+
+<script>
+ 
+    function updateAutoCompleteSuggestion(val) {
+        var wordArray = val.split(/\s+/g);
+        var query="("
+        if(wordArray.length > 1) {
+            var url = "http://vnc11.hyd:8983/solr/question_autocomplete/select?wt=json&indent=true";
+            for(var j=0; j<wordArray.length; j++) {
+                if($.trim(wordArray[j]).length > 0) {
+                    if(j != 0) {
+                        query += " OR ";
+                    }
+                    query += wordArray[j] + "*";
+                }
+            }
+            query+=")"
+            var searchSuggestParameters = {"q" : "tags:" + query};  
+        }
+        else {
+
+            var url = "http://vnc11.hyd:8983/solr/reference_data_new/select?wt=json&indent=true";
+            var query = $.trim(val);
+            if(query.length < 3) {
+                $("#autocomplete_box").hide();
+                return;
+            }
+            var queryOr  = "(" + query + "*" + " OR " + query + "~0.01" + ")"
+            var searchSuggestParameters = {"q" : "dimension_value:" + queryOr}; 
+        } 
+            $.ajax({
+                'url' : url,
+                'data' : searchSuggestParameters,
+                'success' : function(data) {
+                        var docs = data.response.docs;
+                        $("#autocomplete_box_ul").empty();
+                        for(var i=0; i<docs.length; i++) {
+                            $("#autocomplete_box").show();
+                            $("#autocomplete_box").css("left", $("#input_autocomplete_box").offset().left)
+                            var valueToShow = docs[i].question;
+                            if(valueToShow ==undefined) {
+                                valueToShow = docs[i].dimension_value;
+                            }
+                            $("#autocomplete_box_ul").append("<li style='outline: none;' tabindex='1'>" + valueToShow + "</li>");
+                        }
+                        $('#autocomplete_box_ul').find("li").keydown(function(e) {
+                            if(e.which == 40) {
+                                $(this).removeClass("active");
+                                $(this).next("li").addClass("active");
+                                $(this).next("li").focus();
+                                $("#input_autocomplete_box").val($(this).next("li").text());
+                                e.preventDefault();
+                            }
+                            if(e.which == 38) {
+                                $(this).removeClass("active");
+                                $(this).prev("li").addClass("active");
+                                $(this).prev("li").focus();
+                                $("#input_autocomplete_box").val($(this).prev("li").text());
+                                e.preventDefault();
+                            } 
+                            if(e.which == 13) {
+                                $("#input_autocomplete_box").submit();
+                            }
+                            e.preventDefault();
+                            e.stopPropagation();        
+                        });
+                    },
+                'dataType' : 'jsonp',
+                'jsonp' : 'json.wrf'
+            });
+    }
+
+    $("#input_autocomplete_box").keyup(function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        if(e.which == 13) {
+            $("#input_autocomplete_box").submit();
+        }
+        if(e.which == 40) {
+            $("#autocomplete_box").show();
+            $($('#autocomplete_box_ul').find("li")[0]).addClass("active");
+            $($('#autocomplete_box_ul').find("li")[0]).focus();
+            $("#input_autocomplete_box").val($($('#autocomplete_box_ul').find("li")[0]).text());
+        }
+        else {
+            updateAutoCompleteSuggestion($(this).val());
+        }
+    });
+
+    $('body').click(function(e) {
+        if($("#autocomplete_box_ul").has(e.target).length === 0) {
+            $("#autocomplete_box").hide();
+        }
+    });
+
+
+    $("#input_autocomplete_box").submit(function(e) {
+        $("#autocomplete_box").hide();
+        $.get("/data/?phrase=" + $("#input_autocomplete_box").val(), 
+            function(data) {
+                $("#result_area").show();
+                //$("#result_area_query_interpretation_text").html(data.text_interpretation);
+                if(data.text_interpretation){
+                    var inter_txt = ''
+                    for(var i=0;i<data.text_interpretation.length;i++){
+                        inter_txt = inter_txt + data.text_interpretation[i] + (i == data.text_interpretation -1  ? '' : ' '); 
+                    }
+                    $("#result_area_query_interpretation_text").html(inter_txt);
+                }
+                generateGrid(data.grid, data.interpretation);
+                generateBarChart(data.grid, data.interpretation);
+                $("#autocomplete_box").hide();
+                generateTimeSeriesData(data.timeseries, data.interpretation);
+              
+            });
+    });
+
+
+    // Method to construct data and columns for grid
+    function generateGrid(data, query_interpretation) {
+        var gridData = [];
+        var columns = [];
+        if(query_interpretation.dimension && query_interpretation.dimension.length > 0) {
+            for(var i=0; i<query_interpretation.dimension.length; i++) {
+                if(query_interpretation.dimension[i].key == "date") {
+                    continue;
+                }
+                columns.push({
+                    "id" : query_interpretation.dimension[i].key,
+                    "field" : query_interpretation.dimension[i].key,
+                    "name" : query_interpretation.dimension[i].view_name,
+                    "isDimension" : true
+                });
+            }
+        }
+
+        for(var j=0; j<query_interpretation.measure.length; j++) {
+            columns.push({
+                "id" : query_interpretation.measure[j].key,
+                "field" : query_interpretation.measure[j].key,
+                "name" : query_interpretation.measure[j].view_name,
+            })
+        }
+        if(columns.length > 0) {
+        var tempData = [];
+        for(var i=0; i<data.length; i++) {
+            tempData[i] = {"id" : i};
+            for(var j=0; j<columns.length; j++) {
+                if(columns[j].isDimension) {
+                    tempData[i][columns[j].id] = data[i]["_id"][columns[j].id];
+                }
+                else {
+                    tempData[i][columns[j].id] = "$" + Math.round((data[i][columns[j].id]/1000000)) + "M"; 
+                }
+            }
+        }
+        $("#result_area_grid").show();
+        if($("#result_area_grid_1").length > 0) {
+            $("#result_area_grid_1").remove();
+        }
+        $("#result_area_grid").append("<div id='result_area_grid_1'></div");
+        /*var table = "<table style='width:100%;height:400px;overflow:auto;padding:10px;' class='table'><thead></thead><tbody></tbody></table>";
+        $("#result_area_grid_1").html(table);
+        var thead = $($("#result_area_grid_1").find('thead'));
+        thead.html("<tr></tr>");
+        for(var i=0; i<columns.length; i++) {
+            thead.find('tr').append('<th>' + columns[i].name + "</th>");
+        }
+        var tbody = $($("#result_area_grid_1").find('tbody'));
+        for(var i=0; i<tempData.length; i++) {
+            var x = "<tr>";
+            for(var j=0; j<columns.length; j++) {
+                if(!columns[j].isDimension) {
+                x+="<td>" + tempData[i][columns[j].id] + "<i style='padding-left:10px;color:green;' class='fa fa-long-arrow-up'></i><span style='padding-left:5px;color:green'>20%</span></td>";
+                }
+                else {
+                    x+="<td>" + tempData[i][columns[j].id] + "</td>";
+                }
+            }
+            x+="</tr>"
+            tbody.append(x);
+        }*/
+        dportal.grid.createGrid($("#result_area_grid_1"), tempData, columns, {exportToExcel:false});
+        $("#result_area_grid_span").show(); 
+        }
+        else {
+          $("#result_area_grid_span").hide(); 
+       }
+
+
+    }
+
+    // Method to construct Bar Chart
+    function generateBarChart(data, query_interpretation) {
+        if((query_interpretation['dimension'] != undefined) && (query_interpretation.dimension.length == 1 || ((query_interpretation.dimension.length == 2))) && (query_interpretation['measure'] != undefined) && (query_interpretation.measure.length == 1) && (data.length <=10)) {
+
+        var gridData = [];
+        var columns = [];
+        for(var i=0; i<query_interpretation.dimension.length; i++) {
+            if(query_interpretation.dimension[i].key == "date") {
+                    continue;
+                }
+            columns.push({
+                "id" : query_interpretation.dimension[i].key,
+                "field" : query_interpretation.dimension[i].key,
+                "name" : query_interpretation.dimension[i].value,
+                "isDimension" : true
+            });
+        }
+
+        for(var j=0; j<query_interpretation.measure.length; j++) {
+            columns.push({
+                "id" : query_interpretation.measure[j].key,
+                "field" : query_interpretation.measure[j].key,
+                "name" : query_interpretation.measure[j].value,
+            })
+        }
+        var tempData = [];
+        var categories = [];
+        var values = [];
+        for(var i=0; i< data.length; i++) {
+            tempData[i] = {};
+            for(var j=0; j<columns.length; j++) {
+                if(columns[j].isDimension){
+                    categories.push(data[i]["_id"][columns[j].id]);
+                    tempData[i][columns[j].id] = data[i]["_id"][columns[j].id];
+                }
+                else {
+                    values.push(data[i][columns[j].id]/1000000);
+                    tempData[i][columns[j].id] = "$" + (data[i][columns[j].id]/1000000) + "M"; 
+                }
+            }
+        }
+        $('#result_area_bar_chart').highcharts({
+        chart: {
+            type: 'column'
+        },
+        title: {
+            text: ''
+        },
+        xAxis: {
+            categories: categories,
+            crosshair: true
+        },
+        yAxis: {
+            min: 0,
+            title: {
+                text: query_interpretation.measure[0].view_name
+            }
+        },
+        tooltip: {
+            headerFormat: '<span style="font-size:10px">{point.key}</span><table>',
+            pointFormat: '<tr><td style="color:{series.color};padding:0">{series.name}: </td>' +
+                '<td style="padding:0"><b>{point.y:.1f} mm</b></td></tr>',
+            footerFormat: '</table>',
+            shared: true,
+            useHTML: true
+        },
+        plotOptions: {
+            column: {
+                pointPadding: 0.2,
+                borderWidth: 0
+            }
+        },
+        series: [{
+            name: query_interpretation.dimension[0].view_name,
+            data: values
+        }]
+    });
+    $("#result_area_bar_chart_span").show();    
+    }
+    else{
+        $("#result_area_bar_chart_span").hide();    
+    }
+    }
+    
+    // Method to construct time series data
+    function generateTimeSeriesData(data, query_interpretation) {
+        
+
+        var isMultipleDimension = true;
+        var dimension = query_interpretation.dimension;
+        if(dimension && dimension.length > 0) {
+            if(dimension.length == 1 && dimension[0].key == "date") {
+                isMultipleDimension = false;
+            }
+        }
+        else {
+            isMultipleDimension = false;
+        }    
+        if(isMultipleDimension) {
+            var uniqueValues = [];
+            for(var k=0; k<query_interpretation.dimension.length; k++) {
+                if(query_interpretation.dimension[k].key == "date") {
+                        continue;
+                    }
+                for(var m=0; m<data.length; m++) {
+                    var key = data[m]["_id"][query_interpretation.dimension[k].key];
+                    var isPresent = false;
+                    for(var l=0; l<uniqueValues.length; l++) {
+                        if(uniqueValues[l] == key) {
+                            isPresent = true;
+                             break;
+                        }
+                       
+                    }
+                    if(!isPresent) {
+                        uniqueValues.push(key);
+                    }
+                }
+            for(var j=0; j<query_interpretation.measure.length; j++) {
+                $("#result_area_chart").append("<div id='result_area_chart_'" + j + "'></div");
+                var seriesOptions = [];
+                for(var p=0; p<uniqueValues.length; p++) {
+                    seriesOptions[p] = {"name" :  uniqueValues[p]};
+                    seriesOptions[p].data = [];
+                    for(var m=0; m<data.length; m++) {
+                        if(data[m]["_id"][query_interpretation.dimension[k].key] == uniqueValues[p]) {
+                            seriesOptions[p].data.push([data[m]["_id"]["date"], data[m][query_interpretation.measure[j].key]]);
+                        }
+                    }    
+                }
+                $("#result_area_chart").append("<div id='result_area_chart_" + (j+1) + "'></div");
+                createChart("result_area_chart_" + (j+1), seriesOptions);    
+            }
+        }
+
+        }
+        else {
+            var seriesOptions = [];
+            for(var j=0; j<query_interpretation.measure.length; j++) {
+                seriesOptions[j] = {"name" : query_interpretation.measure[j].value};
+                seriesOptions[j].data = [];
+                for(var k=0; k<data.length; k++) {
+                    seriesOptions[j].data.push([data[k]["date"], data[k][query_interpretation.measure[j].key]]);
+                }
+                $("#result_area_chart").append("<div id='result_area_chart_" + (j+1) + "'></div");
+                createChart("result_area_chart_" + (j+1), seriesOptions);
+            }
+            
+        }
+    }
+
+    var createChart = function (containerId, seriesOptions) {
+            if(seriesOptions.length <= 0) {
+                $("#result_area_chart_span").hide();
+            }
+            $("#result_area_chart_span").show();
+            $("#" + containerId).show();
+            dportal.chart.CreateChart('timeseries', {
+                    chart: {
+                        renderTo: containerId,
+                    },
+                    rangeSelector : {
+                        inputEnabled : false
+                    },
+                    yAxis: [{
+                        title: {
+                            text: 'conl'
+                        }
+                    }],
+                    scrollbar : {
+                        enabled : false
+                    },
+                    navigator : {
+                        enabled : false
+                    },
+                    series: seriesOptions
+            });
+        };
+
+</script>
